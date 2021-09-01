@@ -5,6 +5,7 @@ import dayjs from "dayjs";
 
 import app, { init } from "@/app";
 import Setting from "@/entities/Setting";
+import User from "@/entities/User";
 import { clearDatabase, endConnection } from "../utils/database";
 import { createBasicSettings } from "../utils/app";
 import { createUser } from "../factories/userFactory";
@@ -42,6 +43,9 @@ describe("POST /users", () => {
         createdAt: expect.any(String)
       })
     );
+
+    const userDatabase = await User.findOne({ email: userData.email });
+    expect(userDatabase?.email).toEqual(userData.email);
   });
 
   it("should not allow creation of user with email that has been already used", async () => {
@@ -54,6 +58,9 @@ describe("POST /users", () => {
     const response = await agent.post("/users").send(userData);
 
     expect(response.statusCode).toEqual(httpStatus.CONFLICT);
+
+    const usersDatabase = await User.find({ email: userData.email });
+    expect(usersDatabase.length).toEqual(1);
   });
 
   it("should not allow creation of user before event start date", async () => {
@@ -67,5 +74,8 @@ describe("POST /users", () => {
     const response = await agent.post("/users").send(userData);
 
     expect(response.statusCode).toEqual(httpStatus.BAD_REQUEST);
+
+    const usersDatabase = await User.find({ email: userData.email });
+    expect(usersDatabase.length).toEqual(0);
   });
 });
